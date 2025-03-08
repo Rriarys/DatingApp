@@ -12,6 +12,7 @@ namespace DatingApp.Data
         public DbSet<UserLocation> UserLocations { get; set; }
         public DbSet<Preferences> Preferences  { get; set; }
         public DbSet<ProfilePhoto> ProfilePhotos { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -34,6 +35,12 @@ namespace DatingApp.Data
                 .HasOne(u => u.Preferences)
                 .WithOne()
                 .HasForeignKey<Preferences>(p => p.UserId);
+
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(rt => rt.User)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

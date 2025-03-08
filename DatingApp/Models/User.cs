@@ -14,5 +14,6 @@ namespace DatingApp.Models
         public ProfilePhoto ProfilePhoto { get; set; } = new();
         public UserLocation UserLocation { get; set; } = new();
         public Preferences Preferences { get; set; } = new();
+        public List<RefreshToken> RefreshTokens { get; set; } = new();
     }
 }
