@@ -6,10 +6,8 @@ namespace DatingApp.Models
     {
         public int Id { get; set; } // pk
         public int UserId { get; set; } // fk
-        [Required]
-        public required string FirstName { get; set; } // требуем при регистрации
-        [Required]
-        public required DateTime BirthDate { get; set; } // требуем при регистрации
-        public string About { get; set; } = string.Empty; // не требуем вообще
+        public string FirstName { get; set; } = string.Empty; // имя не требуем
+        public DateTime BirthDate { get; set; }
+        public string About { get; set; } = string.Empty; // не требуем 
     }
 }

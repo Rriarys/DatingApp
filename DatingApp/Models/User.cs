@@ -1,5 +1,6 @@
-﻿namespace DatingApp.Models
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace DatingApp.Models
 {
     public class User
     {
