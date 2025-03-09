@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using DatingApp.Models;
 using Microsoft.AspNetCore.Authorization;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.Data;
 
 namespace DatingApp.Controllers
@@ -71,22 +70,22 @@ namespace DatingApp.Controllers
         [HttpPost("logout")]
         public IActionResult Logout()
         {
-            Response.Cookies.Delete("AuthToken");
-            Response.Cookies.Delete("RefreshToken");
+            Response.Cookies.Delete("DatingApp_AuthToken");
+            Response.Cookies.Delete("DatingApp_RefreshToken");
 
             return Ok("Logout success");
         }
 
         private void SetAuthCookies(string accessToken, string refreshToken)
         {
-            Response.Cookies.Append("AuthToken", accessToken, new CookieOptions
+            Response.Cookies.Append("DatingApp_AuthToken", accessToken, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.Strict
             }); 
 
-            Response.Cookies.Append("RefreshToken", refreshToken, new CookieOptions
+            Response.Cookies.Append("DatingApp_RefreshToken", refreshToken, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
