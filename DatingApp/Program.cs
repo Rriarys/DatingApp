@@ -4,6 +4,10 @@ using DatingApp.Services;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using DatingApp.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Rewrite;
+using Microsoft.OpenApi.Models;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,13 +18,41 @@ builder.Services.AddOpenApi();
 
 // swagger
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Добавляем в Swagger поддержку JWT Bearer
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "Enter 'Bearer' followed by your token",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
+
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // reg UserService
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+
 
 // JWT
 var secretKey = builder.Configuration["Jwt:Secret"];
@@ -50,6 +82,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+app.UseRewriter(new RewriteOptions().AddRedirect("^$", "swagger"));
 
 if (app.Environment.IsDevelopment())
 {
@@ -57,6 +90,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.Urls.Add("http://localhost:5237");
+app.Urls.Add("https://localhost:7020");
 
 app.UseHttpsRedirection();
 

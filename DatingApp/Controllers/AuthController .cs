@@ -1,8 +1,7 @@
 ﻿using DatingApp.Services;
 using Microsoft.AspNetCore.Mvc;
-using DatingApp.Models;
+using DatingApp.Dto;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity.Data;
 
 namespace DatingApp.Controllers
 {
@@ -10,7 +9,6 @@ namespace DatingApp.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-
         private readonly UserService _userService;
 
         public AuthController(UserService userService)
@@ -19,45 +17,43 @@ namespace DatingApp.Controllers
         }
 
         [HttpPost("registration")]
-        public async Task<IActionResult> Registration([FromBody] User user)
+        public async Task<IActionResult> Register([FromBody] UserRegistrationDto dto)
         {
-            var result = await _userService.RegisterUserAsync(user);
-
+            var result = await _userService.RegisterUserAsync(dto);
             if (!result.Succeeded)
-            {
                 return BadRequest(result.Errors);
-            }
 
             return Ok("Registration success");
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] User user)
+        public async Task<IActionResult> Login([FromBody] UserLoginDto dto)
         {
-            var tokens = await _userService.AuthenticateUserAsync(user);
-
+            var tokens = await _userService.AuthenticateUserAsync(dto);
             if (tokens == null)
-            {
                 return Unauthorized("Wrong email or password");
-            }
 
-            SetAuthCookies(tokens.Value.AccessToken, tokens.Value.RefreshToken);
-
-            return Ok(tokens);
+            // Возвращаем токены в ответе
+            return Ok(new { AccessToken = tokens.Value.AccessToken, RefreshToken = tokens.Value.RefreshToken });
         }
 
         [HttpPost("refresh")]
-        public async Task<IActionResult> RefreshToken([FromBody] RefreshRequest request)
+        public async Task<IActionResult> RefreshToken([FromBody] TokenRefreshDto dto)
         {
-            var tokens = await _userService.RefreshAccessTokenAsync(request.RefreshToken);
-
+            var tokens = await _userService.RefreshAccessTokenAsync(dto);
             if (tokens == null)
-            {
                 return Unauthorized("Invalid or expired refresh token");
-            }
 
             SetAuthCookies(tokens.Value.AccessToken, tokens.Value.RefreshToken);
-            return Ok(tokens);
+            return Ok(new { tokens.Value.AccessToken, tokens.Value.RefreshToken });
+        }
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("DatingApp_AuthToken");
+            Response.Cookies.Delete("DatingApp_RefreshToken");
+            return Ok("Logout success");
         }
 
         [Authorize]
@@ -67,15 +63,6 @@ namespace DatingApp.Controllers
             return Ok("Access to secure resource is allowed");
         }
 
-        [HttpPost("logout")]
-        public IActionResult Logout()
-        {
-            Response.Cookies.Delete("DatingApp_AuthToken");
-            Response.Cookies.Delete("DatingApp_RefreshToken");
-
-            return Ok("Logout success");
-        }
-
         private void SetAuthCookies(string accessToken, string refreshToken)
         {
             Response.Cookies.Append("DatingApp_AuthToken", accessToken, new CookieOptions
@@ -83,7 +70,7 @@ namespace DatingApp.Controllers
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.Strict
-            }); 
+            });
 
             Response.Cookies.Append("DatingApp_RefreshToken", refreshToken, new CookieOptions
             {
